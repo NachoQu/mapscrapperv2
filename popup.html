@@ -37,6 +37,12 @@
       <section class="stats" id="stats">
         <div><strong>Estado:</strong> <span id="statusText">Listo para comenzar.</span></div>
         <div><strong>Resultados:</strong> <span id="countText">0</span></div>
+        <div class="progressWrap" aria-live="polite">
+          <div class="progressLabel"><span id="progressText">0%</span></div>
+          <div class="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="progressFill" class="progressFill"></div>
+          </div>
+        </div>
       </section>
 
       <footer class="footer">by planoweb.com.ar</footer>

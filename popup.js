@@ -1,6 +1,8 @@
 const state = {
   running: false,
-  rows: []
+  rows: [],
+  maxResults: 120,
+  currentCount: 0
 };
 
 const startBtn = document.getElementById('startBtn');
@@ -11,6 +13,9 @@ const statusText = document.getElementById('statusText');
 const countText = document.getElementById('countText');
 const maxResultsInput = document.getElementById('maxResults');
 const includePlaceIdInput = document.getElementById('includePlaceId');
+const progressText = document.getElementById('progressText');
+const progressFill = document.getElementById('progressFill');
+const progressBar = document.querySelector('.progressBar');
 
 async function getActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -26,6 +31,15 @@ function setButtons() {
   stopBtn.disabled = !state.running;
   downloadCsvBtn.disabled = state.rows.length === 0 || state.running;
   copyJsonBtn.disabled = state.rows.length === 0;
+}
+
+function setProgress(current = 0, total = state.maxResults || 1) {
+  const safeTotal = Math.max(1, Number(total) || 1);
+  const safeCurrent = Math.max(0, Number(current) || 0);
+  const percent = Math.max(0, Math.min(100, Math.round((safeCurrent / safeTotal) * 100)));
+  progressText.textContent = `${percent}%`;
+  progressFill.style.width = `${percent}%`;
+  progressBar.setAttribute('aria-valuenow', String(percent));
 }
 
 function toCsv(rows) {
@@ -54,6 +68,24 @@ function downloadCsv() {
   });
 }
 
+async function sendToTab(tabId, message) {
+  try {
+    return await chrome.tabs.sendMessage(tabId, message);
+  } catch (error) {
+    throw new Error(error?.message || 'No se pudo enviar el mensaje a la pestaña.');
+  }
+}
+
+async function ensureContentScript(tabId) {
+  try {
+    await sendToTab(tabId, { type: 'GEOSCOUT_PING' });
+    return;
+  } catch (_error) {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
+    await sendToTab(tabId, { type: 'GEOSCOUT_PING' });
+  }
+}
+
 startBtn.addEventListener('click', async () => {
   const tab = await getActiveTab();
   if (!tab?.id || !tab.url?.includes('google.com/maps')) {
@@ -63,23 +95,41 @@ startBtn.addEventListener('click', async () => {
 
   state.running = true;
   state.rows = [];
+  state.currentCount = 0;
+  state.maxResults = Number(maxResultsInput.value) || 120;
   setButtons();
-  setStatus('Iniciando extracción...');
   countText.textContent = '0';
+  setStatus('Conectando con Google Maps...');
+  setProgress(0, state.maxResults);
 
-  chrome.tabs.sendMessage(tab.id, {
-    type: 'GEOSCOUT_START',
-    payload: {
-      maxResults: Number(maxResultsInput.value) || 120,
-      includePlaceId: includePlaceIdInput.checked
-    }
-  });
+  try {
+    await ensureContentScript(tab.id);
+    await sendToTab(tab.id, {
+      type: 'GEOSCOUT_START',
+      payload: {
+        maxResults: state.maxResults,
+        includePlaceId: includePlaceIdInput.checked
+      }
+    });
+    setStatus('Scraping iniciado.');
+  } catch (error) {
+    state.running = false;
+    setButtons();
+    setStatus(`Error de conexión: ${error.message}`);
+  }
 });
 
 stopBtn.addEventListener('click', async () => {
   const tab = await getActiveTab();
   if (!tab?.id) return;
-  chrome.tabs.sendMessage(tab.id, { type: 'GEOSCOUT_STOP' });
+
+  try {
+    await sendToTab(tab.id, { type: 'GEOSCOUT_STOP' });
+  } catch (_error) {
+    state.running = false;
+    setButtons();
+    setStatus('No se encontró proceso activo para detener.');
+  }
 });
 
 downloadCsvBtn.addEventListener('click', downloadCsv);
@@ -93,15 +143,19 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (!msg?.type?.startsWith('GEOSCOUT_')) return;
 
   if (msg.type === 'GEOSCOUT_PROGRESS') {
-    setStatus(msg.payload.status);
-    countText.textContent = String(msg.payload.count || 0);
+    const count = Number(msg.payload?.count || 0);
+    state.currentCount = count;
+    setStatus(msg.payload?.status || 'Procesando...');
+    countText.textContent = String(count);
+    setProgress(count, state.maxResults);
   }
 
   if (msg.type === 'GEOSCOUT_DONE') {
     state.running = false;
-    state.rows = msg.payload.rows || [];
+    state.rows = msg.payload?.rows || [];
     countText.textContent = String(state.rows.length);
-    setStatus(msg.payload.status || 'Extracción finalizada.');
+    setStatus(msg.payload?.status || 'Extracción finalizada.');
+    setProgress(state.rows.length, state.maxResults);
     setButtons();
   }
 
@@ -110,6 +164,13 @@ chrome.runtime.onMessage.addListener((msg) => {
     setStatus('Extracción detenida por el usuario.');
     setButtons();
   }
+
+  if (msg.type === 'GEOSCOUT_ERROR') {
+    state.running = false;
+    setStatus(msg.payload?.status || 'Error durante el scraping.');
+    setButtons();
+  }
 });
 
 setButtons();
+setProgress(0, Number(maxResultsInput.value) || 120);
