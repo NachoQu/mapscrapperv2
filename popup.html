@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>GeoScouting by Plano</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="brand">
+        <div class="logo" aria-label="Plano logo">P</div>
+        <div>
+          <h1>GeoScouting by Plano</h1>
+          <p>Encontrá leads locales en Google Maps</p>
+        </div>
+      </header>
+
+      <section class="controls">
+        <label class="field">
+          <span>Máximo de resultados</span>
+          <input id="maxResults" type="number" min="10" max="500" value="120" />
+        </label>
+        <label class="field checkbox">
+          <input id="includePlaceId" type="checkbox" checked />
+          <span>Incluir place_id (si está disponible)</span>
+        </label>
+      </section>
+
+      <section class="actions">
+        <button id="startBtn" class="btn primary">Iniciar scraping</button>
+        <button id="stopBtn" class="btn" disabled>Detener</button>
+        <button id="downloadCsvBtn" class="btn success" disabled>Descargar CSV</button>
+        <button id="copyJsonBtn" class="btn" disabled>Copiar JSON</button>
+      </section>
+
+      <section class="stats" id="stats">
+        <div><strong>Estado:</strong> <span id="statusText">Listo para comenzar.</span></div>
+        <div><strong>Resultados:</strong> <span id="countText">0</span></div>
+      </section>
+
+      <footer class="footer">by planoweb.com.ar</footer>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
