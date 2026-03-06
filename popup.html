@@ -16,33 +16,39 @@
         </div>
       </header>
 
-      <section class="controls">
-        <label class="field">
-          <span>Máximo de resultados</span>
-          <input id="maxResults" type="number" min="10" max="500" value="120" />
-        </label>
-        <label class="field checkbox">
-          <input id="includePlaceId" type="checkbox" checked />
-          <span>Incluir place_id (si está disponible)</span>
-        </label>
-      </section>
+      <section class="panel">
+        <div id="message" class="message">Verificando pestaña activa...</div>
 
-      <section class="actions">
-        <button id="startBtn" class="btn primary">Iniciar scraping</button>
-        <button id="stopBtn" class="btn" disabled>Detener</button>
-        <button id="downloadCsvBtn" class="btn success" disabled>Descargar CSV</button>
-        <button id="copyJsonBtn" class="btn" disabled>Copiar JSON</button>
-      </section>
+        <div class="controls">
+          <input id="filenameInput" type="text" placeholder="Nombre de archivo (opcional)" />
+        </div>
 
-      <section class="stats" id="stats">
-        <div><strong>Estado:</strong> <span id="statusText">Listo para comenzar.</span></div>
-        <div><strong>Resultados:</strong> <span id="countText">0</span></div>
-        <div class="progressWrap" aria-live="polite">
-          <div class="progressLabel"><span id="progressText">0%</span></div>
+        <section id="progressContainer" class="progressWrap" style="display: none">
+          <div id="progressText" class="progressText">Extrayendo leads... 0%</div>
           <div class="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <div id="progressFill" class="progressFill"></div>
           </div>
-        </div>
+        </section>
+
+        <section id="statsContainer" class="stats" style="display: none">
+          <div>Total: <strong id="totalLeads">0</strong></div>
+          <div>Con teléfono: <strong id="withPhone">0</strong></div>
+          <div>Con email: <strong id="withEmail">0</strong></div>
+          <div>Con web: <strong id="withWeb">0</strong></div>
+          <div>Con red social: <strong id="withSocial">0</strong></div>
+          <div>Leads alto valor: <strong id="highValueLeads">0</strong></div>
+          <div>Rating promedio: <strong id="avgRating">0</strong></div>
+        </section>
+
+        <section class="actions">
+          <button id="actionButton" class="btn primary" disabled>Scrape Google Maps</button>
+          <button id="downloadCsvButton" class="btn success" disabled>Descargar CSV</button>
+          <button id="downloadJsonButton" class="btn" disabled>Descargar JSON</button>
+        </section>
+      </section>
+
+      <section class="tableWrap">
+        <table id="resultsTable"></table>
       </section>
 
       <footer class="footer">by planoweb.com.ar</footer>

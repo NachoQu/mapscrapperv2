@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "GeoScouting by Plano",
   "description": "Lead scraping assistant for Google Maps with enriched contact details.",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "permissions": [
     "activeTab",
     "scripting",
