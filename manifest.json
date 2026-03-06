@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "GeoScouting by Plano",
+  "description": "Lead scraping assistant for Google Maps with enriched contact details.",
+  "version": "2.0.3",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "downloads",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.google.com/maps/*",
+    "https://maps.google.com/*"
+  ],
+  "action": {
+    "default_title": "GeoScouting by Plano",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/maps/*",
+        "https://maps.google.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
